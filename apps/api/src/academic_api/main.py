@@ -1,4 +1,5 @@
 import logging
+from contextlib import asynccontextmanager
 
 import uvicorn
 from academic_engine.config import get_settings
@@ -17,7 +18,20 @@ settings = get_settings()
 configure_logging(settings)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Academic Humanizer API", version="0.1.0", docs_url="/api/docs")
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    settings.ensure_directories()
+    SQLiteStore(settings.database_path).initialize()
+    logger.info("Academic Humanizer API initialized")
+    yield
+
+
+app = FastAPI(
+    title="Academic Humanizer API",
+    version="0.1.0",
+    docs_url="/api/docs",
+    lifespan=lifespan,
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
@@ -26,13 +40,6 @@ app.add_middleware(
     allow_headers=["Content-Type"],
 )
 app.include_router(router, prefix="/api/v1")
-
-
-@app.on_event("startup")
-def initialize_application() -> None:
-    settings.ensure_directories()
-    SQLiteStore(settings.database_path).initialize()
-    logger.info("Academic Humanizer API initialized")
 
 
 @app.exception_handler(AcademixError)

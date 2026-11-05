@@ -12,3 +12,11 @@ class StorageError(AcademixError):
 
 class ProviderUnavailableError(AcademixError):
     pass
+
+
+class DocumentValidationError(AcademixError):
+    pass
+
+
+class DocumentNotFoundError(AcademixError):
+    pass

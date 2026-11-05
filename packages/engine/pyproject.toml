@@ -7,7 +7,12 @@ name = "academic-humanizer-engine"
 version = "0.1.0"
 description = "Shared local-first academic document services"
 requires-python = ">=3.9"
-dependencies = ["pydantic>=2.7,<3", "pydantic-settings>=2.2,<3"]
+dependencies = [
+  "pydantic>=2.7,<3",
+  "pydantic-settings>=2.2,<3",
+  "python-docx>=1.1,<2",
+  "PyMuPDF>=1.24,<2",
+]
 
 [project.optional-dependencies]
 documents = ["python-docx>=1.1,<2", "PyMuPDF>=1.24,<2"]
