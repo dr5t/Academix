@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 import re
-from typing import Dict, Iterable, Optional
+from typing import Dict, Optional
 
 from academic_engine.ai_providers import AIProvider
 from academic_engine.document_models import DocumentElement, ParsedDocument
 from academic_engine.exceptions import DocumentValidationError
-from academic_engine.writing_models import ProviderRequest, WritingContext, WritingMode, WritingSuggestion
+from academic_engine.writing_models import (
+    ProviderRequest,
+    WritingContext,
+    WritingMode,
+    WritingSuggestion,
+)
 
 MODE_INSTRUCTIONS: Dict[WritingMode, str] = {
     WritingMode.ACADEMIC_RESEARCH: "Use precise scholarly prose and preserve the author's evidence.",
@@ -19,13 +24,21 @@ MODE_INSTRUCTIONS: Dict[WritingMode, str] = {
 }
 
 
-def build_context(document: ParsedDocument, element_id: str, mode: WritingMode, **options) -> WritingContext:
-    index = next((i for i, element in enumerate(document.elements) if element.id == element_id), None)
+def build_context(
+    document: ParsedDocument, element_id: str, mode: WritingMode, **options
+) -> WritingContext:
+    index = next(
+        (i for i, element in enumerate(document.elements) if element.id == element_id), None
+    )
     if index is None:
         raise DocumentValidationError("Selected document element was not found.")
     element = document.elements[index]
     previous = document.elements[index - 1].original_content if index > 0 else None
-    following = document.elements[index + 1].original_content if index + 1 < len(document.elements) else None
+    following = (
+        document.elements[index + 1].original_content
+        if index + 1 < len(document.elements)
+        else None
+    )
     terminology = sorted(
         {
             token
@@ -75,7 +88,9 @@ class AcademicWritingEngine:
         return self._validate_preservation(suggestion, context)
 
     @staticmethod
-    def _validate_preservation(suggestion: WritingSuggestion, context: WritingContext) -> WritingSuggestion:
+    def _validate_preservation(
+        suggestion: WritingSuggestion, context: WritingContext
+    ) -> WritingSuggestion:
         warnings = list(suggestion.validation_warnings)
         original_numbers = re.findall(r"\b\d+(?:\.\d+)?%?\b", context.selected_text)
         revised_numbers = re.findall(r"\b\d+(?:\.\d+)?%?\b", suggestion.revised_text)
@@ -84,7 +99,11 @@ class AcademicWritingEngine:
             suggestion.meaning_change_warning = suggestion.meaning_change_warning or (
                 "The proposed text changes numeric values."
             )
-        missing_citations = [citation for citation in context.citations if citation in context.selected_text and citation not in suggestion.revised_text]
+        missing_citations = [
+            citation
+            for citation in context.citations
+            if citation in context.selected_text and citation not in suggestion.revised_text
+        ]
         if missing_citations:
             warnings.append("One or more citations from the selected text are missing.")
             suggestion.citation_preservation_status = "warning"

@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from pathlib import Path
 from uuid import uuid4
 
-from academic_engine.ai_providers import AnthropicProvider, GeminiProvider, OllamaProvider, OpenAIProvider
+from academic_engine.ai_providers import (
+    AnthropicProvider,
+    GeminiProvider,
+    OllamaProvider,
+    OpenAIProvider,
+)
 from academic_engine.config import Settings
 from academic_engine.document_parser import parse_document
 from academic_engine.document_service import DocumentService
@@ -12,7 +16,6 @@ from academic_engine.exceptions import DocumentNotFoundError, DocumentValidation
 from academic_engine.storage import SQLiteStore
 from academic_engine.writing_engine import AcademicWritingEngine
 from academic_engine.writing_models import (
-    ProviderRequest,
     SuggestionRecord,
     SuggestionRequest,
     SuggestionStatus,
@@ -73,11 +76,15 @@ class WritingService:
             raise DocumentNotFoundError("Suggestion was not found.")
         return suggestion
 
-    def set_status(self, document_id: str, suggestion_id: str, status: SuggestionStatus) -> SuggestionRecord:
+    def set_status(
+        self, document_id: str, suggestion_id: str, status: SuggestionStatus
+    ) -> SuggestionRecord:
         suggestion = self.suggestion(document_id, suggestion_id)
         if status is SuggestionStatus.ACCEPTED:
             if suggestion.meaning_change_warning or suggestion.validation_warnings:
-                raise DocumentValidationError("This suggestion has validation warnings and requires review.")
+                raise DocumentValidationError(
+                    "This suggestion has validation warnings and requires review."
+                )
         updated = self.store.update_suggestion_status(suggestion_id, status)
         if updated is None:
             raise DocumentNotFoundError("Suggestion was not found.")

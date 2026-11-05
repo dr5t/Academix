@@ -3,12 +3,12 @@ from typing import Optional
 
 import typer
 from academic_engine.config import get_settings
-from academic_engine.logging import configure_logging
-from academic_engine.providers import provider_metadata
-from academic_engine.storage import SQLiteStore
 from academic_engine.document_parser import parse_document
 from academic_engine.document_service import DocumentService
 from academic_engine.docx_modifier import export_accepted_changes
+from academic_engine.logging import configure_logging
+from academic_engine.providers import provider_metadata
+from academic_engine.storage import SQLiteStore
 from academic_engine.writing_models import SuggestionRequest, SuggestionStatus, WritingMode
 from academic_engine.writing_service import WritingService
 from rich.console import Console
@@ -100,7 +100,11 @@ def improve(
     detail = documents.get_document(imported.id)
     parsed = parse_document(documents._path_for(detail))
     element = next(
-        (item for item in parsed.elements if item.element_type.value in {"paragraph", "heading"} and item.original_content.strip()),
+        (
+            item
+            for item in parsed.elements
+            if item.element_type.value in {"paragraph", "heading"} and item.original_content.strip()
+        ),
         None,
     )
     if element is None:
@@ -109,15 +113,22 @@ def improve(
         imported.id,
         SuggestionRequest(element_id=element.id, mode=mode, provider=provider),
     )
-    console.print(f"\nOriginal:\n{suggestion.original_text}\n\nProposed:\n{suggestion.revised_text}")
+    console.print(
+        f"\nOriginal:\n{suggestion.original_text}\n\nProposed:\n{suggestion.revised_text}"
+    )
     if suggestion.validation_warnings:
-        console.print("[yellow]Review warnings:[/yellow] " + "; ".join(suggestion.validation_warnings))
+        console.print(
+            "[yellow]Review warnings:[/yellow] " + "; ".join(suggestion.validation_warnings)
+        )
     if not typer.confirm("Accept this suggestion?"):
         console.print("Suggestion retained as pending.")
         return
     store.update_suggestion_status(suggestion.id, SuggestionStatus.ACCEPTED)
     output = path.with_name(f"{path.stem}.revised{path.suffix}")
-    export_accepted_changes(documents._path_for(detail), output, [store.get_suggestion(suggestion.id)])
+    stored_suggestion = store.get_suggestion(suggestion.id)
+    if stored_suggestion is None:
+        raise typer.BadParameter("The accepted suggestion could not be loaded.")
+    export_accepted_changes(documents._path_for(detail), output, [stored_suggestion])
     console.print(f"Exported: {output}")
 
 
@@ -130,9 +141,7 @@ def analyze_writing(path: Path = typer.Argument(..., exists=True, readable=True)
         item.element_type.value in {"paragraph", "heading"} and bool(item.original_content.strip())
         for item in document.elements
     )
-    configured = [
-        item.provider.value for item in provider_metadata(settings) if item.configured
-    ]
+    configured = [item.provider.value for item in provider_metadata(settings) if item.configured]
     console.print(f"Editable elements: {editable}")
     console.print(f"Configured providers: {', '.join(configured) or 'none'}")
 

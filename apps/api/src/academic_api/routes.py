@@ -5,9 +5,9 @@ from academic_engine.config import get_settings
 from academic_engine.document_models import (
     DocumentAnalysis,
     DocumentDetail,
+    DocumentElement,
     DocumentRecord,
     DocumentUploadResult,
-    DocumentElement,
 )
 from academic_engine.document_parser import parse_document
 from academic_engine.document_service import DocumentService
@@ -171,7 +171,11 @@ def export_document(document_id: str) -> FileResponse:
     from academic_engine.docx_modifier import export_accepted_changes
 
     export_accepted_changes(source, output, service.suggestions(document_id))
-    return FileResponse(output, filename=output.name, media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    return FileResponse(
+        output,
+        filename=output.name,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
 
 
 @router.get(

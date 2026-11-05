@@ -47,13 +47,13 @@ def _parse_response(raw: Dict[str, Any], context: WritingContext) -> WritingSugg
             changes_made=raw.get("changes_made", []),
             explanation=raw.get("explanation", ""),
             meaning_change_warning=raw.get("meaning_change_warning"),
-            citation_preservation_status=raw.get(
-                "citation_preservation_status", "not_verified"
-            ),
+            citation_preservation_status=raw.get("citation_preservation_status", "not_verified"),
             validation_warnings=raw.get("validation_warnings", []),
         )
     except (KeyError, TypeError, ValueError) as error:
-        raise ProviderUnavailableError(f"Provider returned invalid structured output: {error}") from error
+        raise ProviderUnavailableError(
+            f"Provider returned invalid structured output: {error}"
+        ) from error
 
 
 class HTTPProvider(AIProvider):
@@ -61,7 +61,9 @@ class HTTPProvider(AIProvider):
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
 
-    def _request(self, headers: Dict[str, str], payload: Dict[str, Any], request: ProviderRequest) -> Dict[str, Any]:
+    def _request(
+        self, headers: Dict[str, str], payload: Dict[str, Any], request: ProviderRequest
+    ) -> Dict[str, Any]:
         if not self.api_key:
             raise ProviderUnavailableError(f"{self.name} is not configured.")
         try:
@@ -149,12 +151,17 @@ class GeminiProvider(HTTPProvider):
         if not self.api_key:
             raise ProviderUnavailableError("google is not configured.")
         model = request.model or "gemini-1.5-flash"
-        self.base_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        self.base_url = (
+            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        )
         body = self._request(
             {"Content-Type": "application/json", "x-goog-api-key": self.api_key},
             {
                 "contents": [{"parts": [{"text": f"{_system_prompt()}\n{_user_prompt(context)}"}]}],
-                "generationConfig": {"temperature": request.temperature, "maxOutputTokens": request.max_tokens},
+                "generationConfig": {
+                    "temperature": request.temperature,
+                    "maxOutputTokens": request.max_tokens,
+                },
             },
             request,
         )

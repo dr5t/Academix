@@ -294,7 +294,9 @@ class SQLiteStore:
             ).fetchone()
         return self._suggestion_from_row(row) if row else None
 
-    def update_suggestion_status(self, suggestion_id: str, status: SuggestionStatus) -> SuggestionRecord | None:
+    def update_suggestion_status(
+        self, suggestion_id: str, status: SuggestionStatus
+    ) -> SuggestionRecord | None:
         with sqlite3.connect(self.database_path) as connection:
             connection.execute(
                 "UPDATE suggestions SET status = ? WHERE id = ?",

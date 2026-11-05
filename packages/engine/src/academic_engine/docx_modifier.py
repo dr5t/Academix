@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 
 from docx import Document
@@ -10,8 +9,12 @@ from academic_engine.exceptions import DocumentValidationError
 from academic_engine.writing_models import SuggestionRecord, SuggestionStatus
 
 
-def export_accepted_changes(source: Path, destination: Path, suggestions: list[SuggestionRecord]) -> None:
-    accepted = {item.element_id: item for item in suggestions if item.status is SuggestionStatus.ACCEPTED}
+def export_accepted_changes(
+    source: Path, destination: Path, suggestions: list[SuggestionRecord]
+) -> None:
+    accepted = {
+        item.element_id: item for item in suggestions if item.status is SuggestionStatus.ACCEPTED
+    }
     if source.suffix.lower() != ".docx":
         raise DocumentValidationError("Only DOCX export is supported for accepted changes.")
     parsed = parse_document(source)
