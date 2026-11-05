@@ -186,7 +186,7 @@ def _paragraph_element(paragraph: Paragraph, position: int) -> DocumentElement:
     else:
         element_metadata = {}
     return DocumentElement(
-        id=f"p-{uuid4().hex}",
+        id=f"p-{position}",
         element_type=element_type,
         position=position,
         original_content=paragraph.text,
@@ -203,7 +203,7 @@ def _table_element(table: Table, position: int) -> DocumentElement:
         relation_id for relation_id in table._tbl.xpath(".//a:blip/@r:embed") if relation_id
     ]
     return DocumentElement(
-        id=f"tbl-{uuid4().hex}",
+        id=f"tbl-{position}",
         element_type=ElementType.TABLE,
         position=position,
         original_content="\n".join(rows),

@@ -13,8 +13,9 @@ from academic_engine.document_models import (
 )
 from academic_engine.exceptions import StorageError
 from academic_engine.models import Workspace
+from academic_engine.writing_models import SuggestionRecord, SuggestionStatus, WritingMode
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 class SQLiteStore:
@@ -63,6 +64,24 @@ class SQLiteStore:
                         model TEXT,
                         configured INTEGER NOT NULL DEFAULT 0,
                         is_default INTEGER NOT NULL DEFAULT 0
+                    );
+                    CREATE TABLE IF NOT EXISTS suggestions (
+                        id TEXT PRIMARY KEY,
+                        document_id TEXT NOT NULL,
+                        element_id TEXT NOT NULL,
+                        original_text TEXT NOT NULL,
+                        revised_text TEXT NOT NULL,
+                        mode TEXT NOT NULL,
+                        provider TEXT NOT NULL,
+                        model TEXT NOT NULL,
+                        changes_json TEXT NOT NULL,
+                        explanation TEXT NOT NULL,
+                        meaning_change_warning TEXT,
+                        citation_preservation_status TEXT NOT NULL,
+                        validation_warnings_json TEXT NOT NULL,
+                        status TEXT NOT NULL,
+                        created_at TEXT NOT NULL,
+                        FOREIGN KEY(document_id) REFERENCES documents(id)
                     );
                     """
                 )
@@ -223,4 +242,84 @@ class SQLiteStore:
             status=row[5],
             created_at=datetime.fromisoformat(row[6]),
             workspace_id=row[7],
+        )
+
+    def create_suggestion(self, suggestion: SuggestionRecord) -> SuggestionRecord:
+        import json
+
+        try:
+            with sqlite3.connect(self.database_path) as connection:
+                connection.execute(
+                    """
+                    INSERT INTO suggestions(
+                        id, document_id, element_id, original_text, revised_text, mode,
+                        provider, model, changes_json, explanation, meaning_change_warning,
+                        citation_preservation_status, validation_warnings_json, status, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        suggestion.id,
+                        suggestion.document_id,
+                        suggestion.element_id,
+                        suggestion.original_text,
+                        suggestion.revised_text,
+                        suggestion.mode.value,
+                        suggestion.provider,
+                        suggestion.model,
+                        json.dumps(suggestion.changes_made),
+                        suggestion.explanation,
+                        suggestion.meaning_change_warning,
+                        suggestion.citation_preservation_status,
+                        json.dumps(suggestion.validation_warnings),
+                        suggestion.status.value,
+                        suggestion.created_at.isoformat(),
+                    ),
+                )
+        except sqlite3.Error as error:
+            raise StorageError(f"Unable to store writing suggestion: {error}") from error
+        return suggestion
+
+    def list_suggestions(self, document_id: str) -> list[SuggestionRecord]:
+        with sqlite3.connect(self.database_path) as connection:
+            rows = connection.execute(
+                "SELECT * FROM suggestions WHERE document_id = ? ORDER BY created_at DESC",
+                (document_id,),
+            ).fetchall()
+        return [self._suggestion_from_row(row) for row in rows]
+
+    def get_suggestion(self, suggestion_id: str) -> SuggestionRecord | None:
+        with sqlite3.connect(self.database_path) as connection:
+            row = connection.execute(
+                "SELECT * FROM suggestions WHERE id = ?", (suggestion_id,)
+            ).fetchone()
+        return self._suggestion_from_row(row) if row else None
+
+    def update_suggestion_status(self, suggestion_id: str, status: SuggestionStatus) -> SuggestionRecord | None:
+        with sqlite3.connect(self.database_path) as connection:
+            connection.execute(
+                "UPDATE suggestions SET status = ? WHERE id = ?",
+                (status.value, suggestion_id),
+            )
+        return self.get_suggestion(suggestion_id)
+
+    @staticmethod
+    def _suggestion_from_row(row: tuple) -> SuggestionRecord:
+        import json
+
+        return SuggestionRecord(
+            id=row[0],
+            document_id=row[1],
+            element_id=row[2],
+            original_text=row[3],
+            revised_text=row[4],
+            mode=WritingMode(row[5]),
+            provider=row[6],
+            model=row[7],
+            changes_made=json.loads(row[8]),
+            explanation=row[9],
+            meaning_change_warning=row[10],
+            citation_preservation_status=row[11],
+            validation_warnings=json.loads(row[12]),
+            status=SuggestionStatus(row[13]),
+            created_at=datetime.fromisoformat(row[14]),
         )
