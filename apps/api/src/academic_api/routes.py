@@ -4,6 +4,12 @@ from pathlib import Path
 from typing import Optional
 from uuid import uuid4
 
+from academic_engine.ai_providers import (
+    AnthropicProvider,
+    GeminiProvider,
+    OllamaProvider,
+    OpenAIProvider,
+)
 from academic_engine.config import get_settings
 from academic_engine.document_models import (
     DocumentAnalysis,
@@ -14,7 +20,7 @@ from academic_engine.document_models import (
 )
 from academic_engine.document_parser import parse_document
 from academic_engine.document_service import DocumentService
-from academic_engine.exceptions import DocumentNotFoundError
+from academic_engine.exceptions import DocumentNotFoundError, ProviderUnavailableError
 from academic_engine.integrity_models import (
     FindingReviewRequest,
     IntegrityFinding,
@@ -22,7 +28,7 @@ from academic_engine.integrity_models import (
     IntegrityRequest,
 )
 from academic_engine.integrity_service import IntegrityService
-from academic_engine.models import ProviderMetadata
+from academic_engine.models import ProviderConnectionResult, ProviderMetadata, ProviderName
 from academic_engine.providers import provider_metadata
 from academic_engine.storage import SQLiteStore
 from academic_engine.writing_models import (
@@ -36,6 +42,16 @@ from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 
 router = APIRouter()
+
+
+def _provider(provider: ProviderName):
+    settings = get_settings()
+    return {
+        ProviderName.OPENAI: OpenAIProvider(settings.openai_api_key),
+        ProviderName.ANTHROPIC: AnthropicProvider(settings.anthropic_api_key),
+        ProviderName.GOOGLE: GeminiProvider(settings.google_api_key),
+        ProviderName.OLLAMA: OllamaProvider(settings.ollama_base_url),
+    }[provider]
 
 
 def document_service() -> DocumentService:
@@ -65,6 +81,18 @@ def integrity_service() -> IntegrityService:
 @router.get("/providers", response_model=list[ProviderMetadata], tags=["providers"])
 def providers() -> list[ProviderMetadata]:
     return list(provider_metadata(get_settings()))
+
+
+@router.post(
+    "/providers/{provider}/test",
+    response_model=ProviderConnectionResult,
+    tags=["providers"],
+)
+def test_provider(provider: ProviderName) -> ProviderConnectionResult:
+    try:
+        return _provider(provider).test_connection()
+    except ProviderUnavailableError as error:
+        raise HTTPException(status_code=502, detail=str(error)) from error
 
 
 @router.post(

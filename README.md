@@ -23,21 +23,24 @@ The API and CLI use the same `academic-humanizer-engine` package. Local metadata
 
 ## Run locally
 
-Terminal one:
+For the API and dashboard together:
 
 ```bash
 source .venv/bin/activate
+./scripts/dev.sh
+```
+
+Or run them separately:
+
+```bash
 academix serve
 ```
 
-Terminal two:
-
 ```bash
-cd apps/dashboard
-npm run dev
+cd apps/dashboard && npm run dev
 ```
 
-Open `http://localhost:3000`. The API health endpoint is `http://127.0.0.1:8000/api/v1/health` and interactive API documentation is available at `/api/docs`.
+Open `http://localhost:3000`. The API health endpoint is `http://127.0.0.1:8000/api/v1/health` and interactive API documentation is available at `http://127.0.0.1:8000/api/docs`.
 
 ## CLI
 
@@ -46,6 +49,9 @@ academix --help
 academix doctor
 academix init --workspace "Research Workspace"
 academix providers list
+academix providers test --provider ollama
+academix analyze research-paper.docx
+academix compare research-paper.docx source-paper.docx
 academix serve --port 8000
 ```
 
@@ -96,4 +102,28 @@ academix export research-paper.docx --format docx
 
 Only explicitly accepted suggestions are applied to a separate revised DOCX. Original uploads remain immutable. Suggestions with numeric, citation, or other validation warnings require review and cannot be accepted automatically. Multi-run paragraphs with incompatible formatting are conservatively rejected during export rather than flattened.
 
-Provider adapter tests use mocked responses. No live OpenAI, Anthropic, Gemini, or Ollama request was verified in this environment because valid credentials or a running local model were unavailable. Configure a provider and run a real suggestion request to perform live verification.
+Provider adapter tests use mocked responses. Use the provider settings screen or `academix providers test --provider <name>` to test credentials and model availability. A provider is not shown as verified merely because a key is present. No live OpenAI, Anthropic, Gemini, or Ollama request was verified in this environment because valid credentials or a running local model were unavailable.
+
+## Privacy and limitations
+
+Documents, analysis reports, suggestions, and review history remain in the configured local storage directory. Only a user-triggered writing request sends the selected paragraph and bounded context to the selected provider. Integrity review uses local parsing and explicitly configured metadata providers; it does not access Turnitin, iThenticate, restricted academic databases, or the full internet.
+
+DOCX export preserves the original upload and writes a separate revised file. Paragraphs with incompatible formatting runs are rejected instead of flattened. Tables, images, headers, footers, sections, numbering, and references are retained by modifying the original package in place through `python-docx`; unsupported OOXML constructs remain a limitation and should be validated before relying on a revised file.
+
+## Troubleshooting
+
+- `academix doctor` initializes the database and required local directories.
+- If upload fails, confirm the file is a valid DOCX, PDF, or TXT file and is below `ACADEMIX_MAX_UPLOAD_BYTES`.
+- If a provider is unavailable, run `academix providers list` and then `academix providers test --provider <name>`. Credentials belong in `.env`, never in the dashboard.
+- If port 8000 or 3000 is occupied, stop the existing process or run the API with `academix serve --port <port>` and set `NEXT_PUBLIC_API_URL` for the dashboard.
+- Failed imports are cleaned up without deleting existing source documents.
+
+## Academic integrity review
+
+The document workspace can run a citation and originality review against the local document. It detects common APA/Harvard/Chicago author-year and IEEE numeric citations, extracts bibliography entries and DOI values, matches citations to references, flags probable missing attribution, reports repeated passages, and compares against explicitly supplied local source documents. Findings include evidence, confidence, a recommended action, and a review or dismissal state.
+
+Crossref metadata verification is integrated and was verified live during Phase 4. OpenAlex is available as a fallback adapter but was not reachable during verification. Metadata matches validate bibliographic records only; they do not prove that a source supports a claim. The system does not scan the internet, access Turnitin or iThenticate, calculate plagiarism percentages, or make plagiarism determinations.
+
+## Dependency audit status
+
+`npm audit` currently reports one critical `next` advisory chain and one high `postcss` advisory. The available automated fix upgrades Next.js from 14 to 16.4.5, which is a breaking major-version change. It was not applied blindly because this application uses the Next 14 App Router and requires a separately tested framework-upgrade task. Dashboard type checking and production builds pass on the current pinned versions.

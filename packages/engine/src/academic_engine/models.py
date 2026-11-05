@@ -64,6 +64,13 @@ class ProviderMetadata(BaseModel):
     model: Optional[str] = None
 
 
+class ProviderConnectionResult(BaseModel):
+    provider: ProviderName
+    status: str
+    models: list[str] = Field(default_factory=list)
+    message: str
+
+
 class ProviderSettings(BaseModel):
     provider: ProviderName
     model: Optional[str] = None

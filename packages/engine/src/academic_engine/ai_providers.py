@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional
 import httpx
 
 from academic_engine.exceptions import ProviderUnavailableError
+from academic_engine.models import ProviderConnectionResult, ProviderName
 from academic_engine.writing_models import ProviderRequest, WritingContext, WritingSuggestion
 
 
@@ -16,6 +17,13 @@ class AIProvider(ABC):
     @abstractmethod
     def improve(self, context: WritingContext, request: ProviderRequest) -> WritingSuggestion:
         raise NotImplementedError
+
+    def test_connection(self) -> ProviderConnectionResult:
+        return ProviderConnectionResult(
+            provider=ProviderName(self.name),
+            status="not_supported",
+            message="This provider does not expose a connection test.",
+        )
 
 
 def _system_prompt() -> str:
@@ -83,6 +91,32 @@ class HTTPProvider(AIProvider):
             raise ProviderUnavailableError(f"{self.name} request failed.") from error
         return body
 
+    def _get(
+        self, headers: Dict[str, str], request_path: str = "", timeout: float = 15
+    ) -> Dict[str, Any]:
+        if not self.api_key:
+            raise ProviderUnavailableError(f"{self.name} is not configured.")
+        try:
+            with httpx.Client(timeout=timeout) as client:
+                url = (
+                    request_path
+                    if request_path.startswith("http")
+                    else (f"{self.base_url.rstrip('/')}/{request_path.lstrip('/')}")
+                )
+                response = client.get(url, headers=headers)
+                response.raise_for_status()
+                return response.json()
+        except httpx.TimeoutException as error:
+            raise ProviderUnavailableError(f"{self.name} connection timed out.") from error
+        except httpx.HTTPStatusError as error:
+            if error.response.status_code == 429:
+                raise ProviderUnavailableError(f"{self.name} rate limit reached.") from error
+            raise ProviderUnavailableError(
+                f"{self.name} connection failed with status {error.response.status_code}."
+            ) from error
+        except (httpx.HTTPError, ValueError) as error:
+            raise ProviderUnavailableError(f"{self.name} connection failed.") from error
+
 
 class OpenAIProvider(HTTPProvider):
     name = "openai"
@@ -110,6 +144,19 @@ class OpenAIProvider(HTTPProvider):
         except (KeyError, IndexError, TypeError, ValueError) as error:
             raise ProviderUnavailableError("OpenAI returned an unusable response.") from error
         return _parse_response(raw, context)
+
+    def test_connection(self) -> ProviderConnectionResult:
+        body = self._get(
+            {"Authorization": f"Bearer {self.api_key}"},
+            "https://api.openai.com/v1/models",
+        )
+        models = [item["id"] for item in body.get("data", []) if item.get("id")]
+        return ProviderConnectionResult(
+            provider=ProviderName.OPENAI,
+            status="connection_successful",
+            models=models[:100],
+            message="OpenAI credentials and model listing are available.",
+        )
 
 
 class AnthropicProvider(HTTPProvider):
@@ -139,6 +186,28 @@ class AnthropicProvider(HTTPProvider):
         except (KeyError, IndexError, TypeError, ValueError) as error:
             raise ProviderUnavailableError("Anthropic returned an unusable response.") from error
         return _parse_response(raw, context)
+
+    def test_connection(self) -> ProviderConnectionResult:
+        request = ProviderRequest(model="claude-3-5-haiku-latest", max_tokens=16)
+        self._request(
+            {
+                "x-api-key": self.api_key or "",
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            {
+                "model": request.model,
+                "max_tokens": request.max_tokens,
+                "messages": [{"role": "user", "content": "Reply with OK."}],
+            },
+            request,
+        )
+        return ProviderConnectionResult(
+            provider=ProviderName.ANTHROPIC,
+            status="connection_successful",
+            models=["claude-3-5-haiku-latest"],
+            message="Anthropic credentials and the default model are available.",
+        )
 
 
 class GeminiProvider(HTTPProvider):
@@ -171,6 +240,36 @@ class GeminiProvider(HTTPProvider):
             raise ProviderUnavailableError("Google returned an unusable response.") from error
         return _parse_response(raw, context)
 
+    def test_connection(self) -> ProviderConnectionResult:
+        if not self.api_key:
+            raise ProviderUnavailableError("google is not configured.")
+        with httpx.Client(timeout=15) as client:
+            try:
+                response = client.get(
+                    "https://generativelanguage.googleapis.com/v1beta/models",
+                    params={"key": self.api_key},
+                )
+                response.raise_for_status()
+                models = [
+                    item["name"].rsplit("/", 1)[-1]
+                    for item in response.json().get("models", [])
+                    if "generateContent" in item.get("supportedGenerationMethods", [])
+                ]
+            except httpx.TimeoutException as error:
+                raise ProviderUnavailableError("google connection timed out.") from error
+            except httpx.HTTPStatusError as error:
+                if error.response.status_code == 429:
+                    raise ProviderUnavailableError("google rate limit reached.") from error
+                raise ProviderUnavailableError("google model listing failed.") from error
+            except (httpx.HTTPError, ValueError) as error:
+                raise ProviderUnavailableError("google connection failed.") from error
+        return ProviderConnectionResult(
+            provider=ProviderName.GOOGLE,
+            status="connection_successful",
+            models=models[:100],
+            message="Google credentials and model listing are available.",
+        )
+
 
 class OllamaProvider(HTTPProvider):
     name = "ollama"
@@ -198,3 +297,18 @@ class OllamaProvider(HTTPProvider):
         except (KeyError, TypeError, ValueError) as error:
             raise ProviderUnavailableError("Ollama returned an unusable response.") from error
         return _parse_response(raw, context)
+
+    def test_connection(self) -> ProviderConnectionResult:
+        try:
+            with httpx.Client(timeout=15) as client:
+                response = client.get(self.base_url.replace("/api/chat", "/api/tags"), headers={})
+                response.raise_for_status()
+                models = [item["name"] for item in response.json().get("models", [])]
+        except (httpx.HTTPError, ValueError) as error:
+            raise ProviderUnavailableError("Ollama is unreachable.") from error
+        return ProviderConnectionResult(
+            provider=ProviderName.OLLAMA,
+            status="connection_successful",
+            models=models,
+            message="Ollama is reachable and returned its installed models.",
+        )

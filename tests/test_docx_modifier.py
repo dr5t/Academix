@@ -36,3 +36,32 @@ def test_export_applies_only_accepted_change_and_preserves_source(tmp_path: Path
     revised = parse_document(output)
     assert revised.elements[0].original_content == "Revised paragraph."
     assert revised.elements[1].original_content == "Table content"
+
+
+def test_export_maps_paragraphs_by_body_position_after_table(tmp_path: Path) -> None:
+    source = tmp_path / "source-with-table.docx"
+    output = tmp_path / "revised-with-table.docx"
+    document = Document()
+    document.add_table(rows=1, cols=1).cell(0, 0).text = "Table content"
+    document.add_paragraph("Target paragraph.")
+    document.save(source)
+    parsed = parse_document(source)
+    suggestion = SuggestionRecord(
+        id="s2",
+        document_id="d1",
+        element_id=parsed.elements[1].id,
+        original_text="Target paragraph.",
+        revised_text="Revised target paragraph.",
+        mode=WritingMode.ACADEMIC_RESEARCH,
+        provider="fake",
+        model="test",
+        explanation="Clearer wording.",
+        citation_preservation_status="preserved",
+        created_at=datetime.now(timezone.utc),
+    )
+    export_accepted_changes(
+        source, output, [suggestion.model_copy(update={"status": SuggestionStatus.ACCEPTED})]
+    )
+    revised = parse_document(output)
+    assert revised.elements[0].original_content == "Table content"
+    assert revised.elements[1].original_content == "Revised target paragraph."

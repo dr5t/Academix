@@ -3,6 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from docx import Document
+from docx.document import Document as DocumentObject
+from docx.oxml.ns import qn
+from docx.table import Table
+from docx.text.paragraph import Paragraph
 
 from academic_engine.document_parser import parse_document
 from academic_engine.exceptions import DocumentValidationError
@@ -17,21 +21,22 @@ def export_accepted_changes(
     }
     if source.suffix.lower() != ".docx":
         raise DocumentValidationError("Only DOCX export is supported for accepted changes.")
+    if source.resolve() == destination.resolve():
+        raise DocumentValidationError("The revised document must be written to a separate path.")
     parsed = parse_document(source)
     for element in parsed.elements:
         proposal = accepted.get(element.id)
         if proposal and proposal.original_text != element.original_content:
             raise DocumentValidationError("A suggestion no longer matches the original document.")
     document = Document(source)
-    paragraphs = list(document.paragraphs)
+    body_paragraphs = _body_paragraphs(document)
     for element in parsed.elements:
         proposal = accepted.get(element.id)
         if not proposal or not element.id.startswith("p-"):
             continue
-        paragraph_index = int(element.id[2:])
-        if paragraph_index >= len(paragraphs):
+        paragraph = body_paragraphs.get(element.position)
+        if paragraph is None:
             raise DocumentValidationError("Document structure changed since analysis.")
-        paragraph = paragraphs[paragraph_index]
         if len(paragraph.runs) > 1 and not _same_formatting(paragraph):
             raise DocumentValidationError(
                 "This paragraph uses multiple formatting runs and cannot be safely rewritten."
@@ -44,6 +49,18 @@ def export_accepted_changes(
             paragraph.add_run(proposal.revised_text)
     destination.parent.mkdir(parents=True, exist_ok=True)
     document.save(destination)
+
+
+def _body_paragraphs(document: DocumentObject) -> dict[int, Paragraph]:
+    result: dict[int, Paragraph] = {}
+    position = 0
+    for child in document.element.body.iterchildren():
+        if child.tag == qn("w:p"):
+            result[position] = Paragraph(child, document)
+        elif child.tag == qn("w:tbl"):
+            Table(child, document)
+        position += 1
+    return result
 
 
 def _same_formatting(paragraph) -> bool:
