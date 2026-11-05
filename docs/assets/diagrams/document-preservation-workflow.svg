@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" role="img" aria-labelledby="title">
+  <title>Document preservation workflow</title>
+  <rect width="1200" height="300" fill="#0C0D0E"/>
+  <g fill="#141618" stroke="#3a3f43" stroke-width="1.5">
+    <rect x="28" y="95" width="160" height="72" rx="5"/>
+    <rect x="220" y="95" width="160" height="72" rx="5"/>
+    <rect x="412" y="95" width="160" height="72" rx="5"/>
+    <rect x="604" y="95" width="160" height="72" rx="5"/>
+    <rect x="796" y="95" width="160" height="72" rx="5"/>
+    <rect x="988" y="95" width="184" height="72" rx="5"/>
+  </g>
+  <g font-family="Inter,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#E8E8E6">
+    <text x="108" y="123">Immutable</text><text x="108" y="145">original</text>
+    <text x="300" y="123">Working</text><text x="300" y="145">representation</text>
+    <text x="492" y="123">Proposed</text><text x="492" y="145">changes</text>
+    <text x="684" y="123">User</text><text x="684" y="145">approval</text>
+    <text x="876" y="123">Separate</text><text x="876" y="145">revised DOCX</text>
+    <text x="1080" y="123">Integrity</text><text x="1080" y="145">validation</text>
+  </g>
+  <g stroke="#E54D2E" stroke-width="2" fill="none">
+    <path d="M188 131h32M380 131h32M572 131h32M764 131h32M956 131h32"/>
+  </g>
+  <g fill="#E54D2E">
+    <path d="m216 125 10 6-10 6zM408 125l10 6-10 6zM600 125l10 6-10 6zM792 125l10 6-10 6zM984 125l10 6-10 6z"/>
+  </g>
+  <path d="M1080 167v74H108" fill="none" stroke="#80A88B" stroke-width="2" stroke-dasharray="6 6"/>
+  <text x="600" y="265" text-anchor="middle" fill="#80A88B" font-family="JetBrains Mono,monospace" font-size="12">source bytes remain unchanged; output is a separate artifact</text>
+</svg>

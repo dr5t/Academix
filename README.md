@@ -16,27 +16,31 @@
 
 ## Contents
 
-- [Overview](#-overview)
-- [Capabilities](#-capabilities)
-- [Screenshots](#-screenshots)
-- [Architecture](#-architecture)
-- [Processing workflow](#-processing-workflow)
-- [Dashboard](#-dashboard)
-- [CLI](#-cli)
-- [Supported formats](#-supported-formats)
-- [Writing modes](#-writing-modes)
-- [Provider configuration](#-provider-configuration)
-- [Academic integrity and citation review](#-academic-integrity-and-citation-review)
-- [Formatting preservation](#-formatting-preservation)
-- [Installation](#-installation)
-- [Environment configuration](#-environment-configuration)
-- [Running locally](#-running-locally)
-- [Testing and verification](#-testing-and-verification)
-- [Privacy and security](#-privacy-and-security)
-- [Current limitations](#-current-limitations)
-- [Roadmap](#-roadmap)
-- [Contributing](#-contributing)
-- [License](#-license)
+- [Overview](#overview)
+- [Capabilities](#capabilities)
+- [Screenshots](#screenshots)
+- [CLI screenshots](#cli-screenshots)
+- [Architecture](#architecture)
+- [Processing workflow](#processing-workflow)
+- [Dashboard](#dashboard)
+- [CLI](#cli)
+- [Supported formats](#supported-formats)
+- [Writing modes](#writing-modes)
+- [Provider configuration](#provider-configuration)
+- [Academic integrity](#academic-integrity)
+- [Citation intelligence](#citation-intelligence)
+- [Similarity review](#similarity-review)
+- [Formatting preservation](#formatting-preservation)
+- [Installation](#installation)
+- [Environment configuration](#environment-configuration)
+- [Running locally](#running-locally)
+- [API documentation](#api-documentation)
+- [Testing and verification](#testing-and-verification)
+- [Privacy and security](#privacy-and-security)
+- [Current limitations](#current-limitations)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## ![Overview](docs/assets/icons/overview.svg) Overview
 
@@ -95,6 +99,20 @@ The screenshots below were captured from the running Next.js dashboard and FastA
 ![Provider settings](docs/assets/screenshots/provider-settings.png)
 
 The writing comparison panel is implemented in the document workspace, but a genuine revised suggestion screenshot was not captured because no live AI provider was configured in this environment. The workspace therefore remains in its real pending-provider state rather than showing fabricated output.
+
+## ![Terminal](docs/assets/icons/terminal.svg) CLI screenshots
+
+The CLI commands were verified directly with the repository-local executable. A window-level terminal screenshot could not be captured in the current headless desktop session, so no synthetic terminal image is included. This avoids presenting rendered text as a screenshot of a real terminal.
+
+Verified output states:
+
+```text
+academix --help       -> command list rendered
+academix doctor       -> local services ready
+academix providers list -> OpenAI, Anthropic, Gemini, and Ollama status rendered
+```
+
+The exact command examples and provider-unavailable behavior are documented in the [CLI](#-cli) section below.
 
 ## ![Architecture](docs/assets/icons/architecture.svg) Architecture
 
@@ -155,7 +173,7 @@ academix serve --port 8000
 
 PDF layout-preserving editing is not implemented.
 
-## ![Features](docs/assets/icons/features.svg) Writing modes
+## ![Writing engine](docs/assets/icons/writing-engine.svg) Writing modes
 
 The writing engine supports:
 
@@ -198,7 +216,7 @@ academix providers test --provider openai
 
 The provider page distinguishes `not configured`, `not tested`, `connection_successful`, and connection failure. In this repository environment, no live AI provider request has been verified.
 
-## ![Academic integrity](docs/assets/icons/academic-integrity.svg) Academic integrity and citation review
+## ![Academic integrity](docs/assets/icons/academic-integrity.svg) Academic integrity
 
 ![Integrity workflow](docs/assets/diagrams/integrity-workflow.svg)
 
@@ -221,11 +239,28 @@ Implemented checks include:
 
 Metadata matches do not prove that a source supports a claim. The application does not access Turnitin, iThenticate, restricted academic databases, or the full internet.
 
-## ![Security](docs/assets/icons/security.svg) Formatting preservation
+## ![Academic integrity](docs/assets/icons/academic-integrity.svg) Citation intelligence
+
+Citation intelligence currently extracts author-year and IEEE-like in-text citations, bibliography entries, DOIs, publication years, and author names. It compares citations with references and reports missing, unreferenced, inconsistent, or unverifiable entries with evidence and confidence.
+
+Supported style detection includes APA 7, IEEE, Harvard, MLA, and Chicago heuristics. This is a review aid rather than a full style-guide validator.
+
+## ![Academic integrity](docs/assets/icons/academic-integrity.svg) Similarity review
+
+Similarity review has two deliberately bounded inputs:
+
+- Repeated passages within the uploaded document.
+- Overlap against an explicitly supplied local comparison document.
+
+Each result includes matching text and source location where available. No internet-wide similarity percentage is generated, and no restricted academic service is implied.
+
+## ![Formatting](docs/assets/icons/formatting.svg) Formatting preservation
 
 ![Controlled document processing](docs/assets/diagrams/document-processing-pipeline.svg)
 
 Accepted suggestions are applied to a separate output DOCX. The source hash and source bytes remain unchanged.
+
+![Document preservation workflow](docs/assets/diagrams/document-preservation-workflow.svg)
 
 Current safeguards:
 
@@ -297,6 +332,12 @@ cd apps/dashboard && npm run dev
 ```
 
 Open `http://localhost:3000`. API health is available at `http://127.0.0.1:8000/api/v1/health`; OpenAPI documentation is at `http://127.0.0.1:8000/api/docs`.
+
+## ![Architecture](docs/assets/icons/architecture.svg) API documentation
+
+The FastAPI service publishes interactive OpenAPI documentation at `/api/docs` and the schema at `/api/openapi.json`. The versioned route surface includes health/configuration, document upload and analysis, suggestions, integrity findings, export, and provider connection testing.
+
+The dashboard calls the API through `NEXT_PUBLIC_API_URL`; the default local development target is `http://127.0.0.1:8000/api/v1`.
 
 ## ![Testing](docs/assets/icons/testing.svg) Testing and verification
 

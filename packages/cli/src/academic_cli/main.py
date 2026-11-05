@@ -144,10 +144,13 @@ def improve(
     )
     if element is None:
         raise typer.BadParameter("The document has no editable paragraph.")
-    suggestion = WritingService(settings, store, documents).create_suggestion(
-        imported.id,
-        SuggestionRequest(element_id=element.id, mode=selected_mode, provider=provider),
-    )
+    try:
+        suggestion = WritingService(settings, store, documents).create_suggestion(
+            imported.id,
+            SuggestionRequest(element_id=element.id, mode=selected_mode, provider=provider),
+        )
+    except ProviderUnavailableError as error:
+        raise typer.BadParameter(str(error)) from error
     console.print(
         f"\nOriginal:\n{suggestion.original_text}\n\nProposed:\n{suggestion.revised_text}"
     )
