@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 import typer
 from academic_engine.config import get_settings
@@ -10,6 +11,12 @@ from rich.table import Table
 
 app = typer.Typer(help="Local-first academic document intelligence workspace.")
 console = Console()
+PROVIDER_LABELS = {
+    "openai": "OpenAI",
+    "anthropic": "Anthropic",
+    "google": "Google Gemini",
+    "ollama": "Ollama",
+}
 
 
 @app.callback()
@@ -52,14 +59,14 @@ def providers_command(
     table = Table("Provider", "Status")
     for metadata in provider_metadata(get_settings()):
         status = "configured" if metadata.configured else "not configured"
-        table.add_row(metadata.provider.value, status)
+        table.add_row(PROVIDER_LABELS[metadata.provider.value], status)
     console.print(table)
 
 
 @app.command()
 def serve(
-    host: str | None = typer.Option(None, "--host"),
-    port: int | None = typer.Option(None, "--port", min=1, max=65535),
+    host: Optional[str] = typer.Option(None, "--host"),
+    port: Optional[int] = typer.Option(None, "--port", min=1, max=65535),
 ) -> None:
     """Start the local FastAPI service."""
     import uvicorn

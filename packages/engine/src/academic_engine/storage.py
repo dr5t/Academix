@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -64,7 +64,7 @@ class SQLiteStore:
             raise StorageError(f"Unable to initialize local database: {error}") from error
 
     def create_workspace(self, name: str) -> Workspace:
-        workspace = Workspace(id=str(uuid4()), name=name, created_at=datetime.now(UTC))
+        workspace = Workspace(id=str(uuid4()), name=name, created_at=datetime.now(timezone.utc))
         with sqlite3.connect(self.database_path) as connection:
             connection.execute(
                 "INSERT INTO workspaces(id, name, created_at) VALUES (?, ?, ?)",

@@ -16,6 +16,7 @@ out/
 dist/
 build/
 *.log
+*.tsbuildinfo
 storage/
 *.sqlite3
 .idea/

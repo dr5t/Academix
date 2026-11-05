@@ -1,6 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -48,9 +49,9 @@ class ProcessingHistory(BaseModel):
     id: str
     document_id: str
     status: str
-    mode: str | None = None
-    provider: ProviderName | None = None
-    output_path: Path | None = None
+    mode: Optional[str] = None
+    provider: Optional[ProviderName] = None
+    output_path: Optional[Path] = None
     created_at: datetime
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -60,13 +61,13 @@ class ProviderMetadata(BaseModel):
     provider: ProviderName
     configured: bool
     default: bool = False
-    model: str | None = None
+    model: Optional[str] = None
 
 
 class ProviderSettings(BaseModel):
     provider: ProviderName
-    model: str | None = None
-    api_key: str | None = Field(default=None, repr=False)
+    model: Optional[str] = None
+    api_key: Optional[str] = Field(default=None, repr=False)
 
 
 class DocumentService:
