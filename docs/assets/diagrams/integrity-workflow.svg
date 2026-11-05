@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 300" role="img" aria-labelledby="title">
+  <title>Document integrity workflow</title>
+  <rect width="1000" height="300" fill="#0C0D0E"/>
+  <g font-family="Inter,Arial,sans-serif" text-anchor="middle" fill="#E8E8E6" stroke="#3a3f43" stroke-width="1.5">
+    <rect x="35" y="90" width="170" height="70" rx="6" fill="#141618"/><rect x="260" y="90" width="170" height="70" rx="6" fill="#141618"/><rect x="485" y="90" width="170" height="70" rx="6" fill="#141618"/><rect x="710" y="90" width="170" height="70" rx="6" fill="#141618"/>
+    <text x="120" y="120" font-size="16">Original DOCX</text><text x="120" y="143" font-size="12" fill="#80A88B">immutable source</text><text x="345" y="120" font-size="16">Proposal</text><text x="345" y="143" font-size="12">pending review</text><text x="570" y="120" font-size="16">Decision</text><text x="570" y="143" font-size="12">accept / reject</text><text x="795" y="120" font-size="16">Revised DOCX</text><text x="795" y="143" font-size="12">validated output</text>
+  </g>
+  <path d="M205 125h55m170 0h55m170 0h55" stroke="#E54D2E" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M795 160v75H120V160" fill="none" stroke="#80A88B" stroke-width="2" stroke-dasharray="6 6"/>
+  <text x="450" y="265" fill="#80A88B" font-family="JetBrains Mono,monospace" font-size="12" text-anchor="middle">source hash and structure checks protect the original</text>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="m0 0 8 4-8 4z" fill="#E54D2E"/></marker></defs>
+</svg>

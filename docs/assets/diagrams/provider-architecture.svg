@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 390" role="img" aria-labelledby="title">
+  <title>Provider-independent AI architecture</title>
+  <rect width="900" height="390" fill="#0C0D0E"/>
+  <g font-family="Inter,Arial,sans-serif" text-anchor="middle" fill="#E8E8E6" stroke="#3a3f43" stroke-width="1.5">
+    <rect x="300" y="35" width="300" height="80" rx="6" fill="#1A1D20"/><text x="450" y="68" font-size="18">AIProvider interface</text><text x="450" y="94" font-size="13" fill="#92979D">structured writing responses</text>
+    <rect x="45" y="230" width="175" height="70" rx="6" fill="#141618"/><rect x="255" y="230" width="175" height="70" rx="6" fill="#141618"/><rect x="465" y="230" width="175" height="70" rx="6" fill="#141618"/><rect x="675" y="230" width="175" height="70" rx="6" fill="#141618"/>
+    <text x="132" y="270" font-size="16">OpenAI</text><text x="342" y="270" font-size="16">Anthropic</text><text x="552" y="270" font-size="16">Gemini</text><text x="762" y="270" font-size="16">Ollama</text>
+  </g>
+  <path d="M132 230V160h636v70M342 230V160M552 230V160M762 230V160" fill="none" stroke="#E54D2E" stroke-width="2"/>
+  <text x="450" y="350" fill="#92979D" font-family="JetBrains Mono,monospace" font-size="12" text-anchor="middle">configured ≠ verified · connection tests report live status</text>
+</svg>

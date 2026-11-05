@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">Academic Humanizer document intelligence</title>
+  <desc id="desc">Editorial document structure visualized on an obsidian background.</desc>
+  <rect width="1200" height="360" fill="#0C0D0E"/>
+  <path d="M0 300h1200M0 60h1200" stroke="#24272A"/>
+  <path d="M740 40h300l100 100v180H740z" fill="#141618" stroke="#2d3135"/>
+  <path d="M1040 40v112h100M790 190h240M790 225h185M790 260h220" fill="none" stroke="#92979D" stroke-width="3"/>
+  <path d="M804 191h92" stroke="#E54D2E" stroke-width="5"/>
+  <g transform="translate(64 76)">
+    <rect width="72" height="72" rx="12" fill="#E54D2E"/>
+    <path d="M19 17h28l10 10v34H19zM47 17v13h10M27 39h24M27 49h17" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="square"/>
+  </g>
+  <text x="64" y="205" fill="#E8E8E6" font-family="Inter,Arial,sans-serif" font-size="42" font-weight="650" letter-spacing="-1.5">Academic Humanizer</text>
+  <text x="67" y="245" fill="#92979D" font-family="Inter,Arial,sans-serif" font-size="18" letter-spacing="2">ACADEMIC WRITING &amp; DOCUMENT INTELLIGENCE</text>
+  <text x="67" y="292" fill="#E54D2E" font-family="JetBrains Mono,monospace" font-size="13">LOCAL-FIRST / STRUCTURE-AWARE / REVIEWABLE</text>
+</svg>

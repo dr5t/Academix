@@ -11,10 +11,11 @@ cleanup() {
 
 trap cleanup INT TERM EXIT
 
-academix serve &
+root_dir=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+"$root_dir/.venv/bin/academix" serve &
 api_pid=$!
 
-(cd "$(dirname "$0")/../apps/dashboard" && npm run dev) &
+(cd "$root_dir/apps/dashboard" && npm run dev) &
 dashboard_pid=$!
 
 wait "$api_pid" "$dashboard_pid"
