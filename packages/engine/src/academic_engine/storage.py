@@ -5,8 +5,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
+from academic_engine.document_models import (
+    DocumentAnalysis,
+    DocumentDetail,
+    DocumentKind,
+    DocumentRecord,
+)
 from academic_engine.exceptions import StorageError
-from academic_engine.document_models import DocumentAnalysis, DocumentDetail, DocumentKind, DocumentRecord
 from academic_engine.models import Workspace
 
 SCHEMA_VERSION = 2
@@ -73,9 +78,15 @@ class SQLiteStore:
                         for item in connection.execute("PRAGMA table_info(documents)").fetchall()
                     }
                     migrations = {
-                        "file_size": "ALTER TABLE documents ADD COLUMN file_size INTEGER NOT NULL DEFAULT 0",
-                        "file_hash": "ALTER TABLE documents ADD COLUMN file_hash TEXT NOT NULL DEFAULT ''",
-                        "status": "ALTER TABLE documents ADD COLUMN status TEXT NOT NULL DEFAULT 'ready'",
+                        "file_size": (
+                            "ALTER TABLE documents ADD COLUMN file_size INTEGER NOT NULL DEFAULT 0"
+                        ),
+                        "file_hash": (
+                            "ALTER TABLE documents ADD COLUMN file_hash TEXT NOT NULL DEFAULT ''"
+                        ),
+                        "status": (
+                            "ALTER TABLE documents ADD COLUMN status TEXT NOT NULL DEFAULT 'ready'"
+                        ),
                         "analysis_json": "ALTER TABLE documents ADD COLUMN analysis_json TEXT",
                     }
                     for column, statement in migrations.items():
@@ -195,7 +206,10 @@ class SQLiteStore:
 
     def delete_document(self, document_id: str) -> None:
         with sqlite3.connect(self.database_path) as connection:
-            connection.execute("DELETE FROM processing_history WHERE document_id = ?", (document_id,))
+            connection.execute(
+                "DELETE FROM processing_history WHERE document_id = ?",
+                (document_id,),
+            )
             connection.execute("DELETE FROM documents WHERE id = ?", (document_id,))
 
     @staticmethod

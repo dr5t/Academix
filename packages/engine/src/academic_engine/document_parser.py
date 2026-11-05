@@ -3,8 +3,8 @@ from __future__ import annotations
 import hashlib
 import re
 import zipfile
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 from uuid import uuid4
 
 import fitz
@@ -82,7 +82,7 @@ def _parse_docx(path: Path, source_hash: str) -> ParsedDocument:
     position = 0
     references: list[str] = []
     heading_structure: list[str] = []
-    title: str | None = None
+    title: str | None = document.core_properties.title or None
     table_count = 0
     image_count = 0
     for block in _iter_body_blocks(document):
@@ -90,7 +90,7 @@ def _parse_docx(path: Path, source_hash: str) -> ParsedDocument:
             element = _paragraph_element(block, position)
             if element.element_type is ElementType.HEADING:
                 heading_structure.append(element.original_content)
-                if title is None or element.style.heading_level == 1:
+                if title is None:
                     title = element.original_content
                 if element.original_content.strip().lower() in {"references", "bibliography"}:
                     references.append(element.original_content)
@@ -168,9 +168,7 @@ def _paragraph_element(paragraph: Paragraph, position: int) -> DocumentElement:
     heading_level = _heading_level(style_name)
     element_type = ElementType.HEADING if heading_level else ElementType.PARAGRAPH
     relationships = [
-        relation_id
-        for relation_id in paragraph._p.xpath(".//a:blip/@r:embed")
-        if relation_id
+        relation_id for relation_id in paragraph._p.xpath(".//a:blip/@r:embed") if relation_id
     ]
     runs = [
         TextRun(
@@ -202,9 +200,7 @@ def _paragraph_element(paragraph: Paragraph, position: int) -> DocumentElement:
 def _table_element(table: Table, position: int) -> DocumentElement:
     rows = [" | ".join(cell.text for cell in row.cells) for row in table.rows]
     relationships = [
-        relation_id
-        for relation_id in table._tbl.xpath(".//a:blip/@r:embed")
-        if relation_id
+        relation_id for relation_id in table._tbl.xpath(".//a:blip/@r:embed") if relation_id
     ]
     return DocumentElement(
         id=f"tbl-{uuid4().hex}",
@@ -233,7 +229,9 @@ def _parse_pdf(path: Path, source_hash: str) -> ParsedDocument:
     for page_index, page in enumerate(pdf):
         text = page.get_text("text").strip()
         if not text:
-            empty_pages.append(f"Page {page_index + 1} has no extractable text; OCR may be required.")
+            empty_pages.append(
+                f"Page {page_index + 1} has no extractable text; OCR may be required."
+            )
         blocks = page.get_text("blocks")
         elements.append(
             DocumentElement(
@@ -303,4 +301,6 @@ def _parse_text(path: Path, source_hash: str) -> ParsedDocument:
 
 
 def _find_citations(text: str) -> list[str]:
-    return sorted({match.group(0) for pattern in _CITATION_PATTERNS for match in re.finditer(pattern, text)})
+    return sorted(
+        {match.group(0) for pattern in _CITATION_PATTERNS for match in re.finditer(pattern, text)}
+    )

@@ -1,8 +1,5 @@
-import shutil
 from pathlib import Path
 from uuid import uuid4
-
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
 
 from academic_engine.config import get_settings
 from academic_engine.document_models import (
@@ -16,6 +13,7 @@ from academic_engine.exceptions import DocumentNotFoundError
 from academic_engine.models import ProviderMetadata
 from academic_engine.providers import provider_metadata
 from academic_engine.storage import SQLiteStore
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
 
 router = APIRouter()
 
@@ -42,7 +40,8 @@ def providers() -> list[ProviderMetadata]:
 async def upload_document(file: UploadFile = File(...)) -> DocumentUploadResult:
     settings = get_settings()
     settings.ensure_directories()
-    temporary_path = settings.temp_path / f"{uuid4().hex}.upload"
+    suffix = Path(file.filename or "").suffix.lower()
+    temporary_path = settings.temp_path / f"{uuid4().hex}{suffix}"
     try:
         size = 0
         with temporary_path.open("wb") as target:
@@ -81,7 +80,11 @@ def analyze_document(document_id: str) -> DocumentAnalysis:
         raise HTTPException(status_code=404, detail=str(error)) from error
 
 
-@router.delete("/documents/{document_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["documents"])
+@router.delete(
+    "/documents/{document_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["documents"],
+)
 def delete_document(document_id: str) -> None:
     try:
         document_service().delete_document(document_id)

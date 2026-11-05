@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Dict, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -49,7 +49,7 @@ class DocumentElement(BaseModel):
     style: StyleInfo = Field(default_factory=StyleInfo)
     relationships: list[str] = Field(default_factory=list)
     processing_status: str = "original"
-    metadata: dict[str, str | int | float | bool | None] = Field(default_factory=dict)
+    metadata: Dict[str, Union[str, int, float, bool, None]] = Field(default_factory=dict)
 
 
 class DocumentSection(BaseModel):

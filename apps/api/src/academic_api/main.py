@@ -18,6 +18,7 @@ settings = get_settings()
 configure_logging(settings)
 logger = logging.getLogger(__name__)
 
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     settings.ensure_directories()
