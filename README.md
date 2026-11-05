@@ -14,35 +14,34 @@
 
 > Academic Humanizer is designed for reviewable, source-preserving work. It does not promise plagiarism scores, AI-detector scores, or automatic research validation.
 
-## Contents
+<h2><img src="docs/assets/icons/overview.svg" width="20" height="20" alt="" /> Contents</h2>
 
-- [Overview](#overview)
-- [Capabilities](#capabilities)
-- [Screenshots](#screenshots)
-- [CLI screenshots](#cli-screenshots)
-- [Architecture](#architecture)
-- [Processing workflow](#processing-workflow)
-- [Dashboard](#dashboard)
-- [CLI](#cli)
-- [Supported formats](#supported-formats)
-- [Writing modes](#writing-modes)
-- [Provider configuration](#provider-configuration)
-- [Academic integrity](#academic-integrity)
-- [Citation intelligence](#citation-intelligence)
-- [Similarity review](#similarity-review)
-- [Formatting preservation](#formatting-preservation)
-- [Installation](#installation)
-- [Environment configuration](#environment-configuration)
-- [Running locally](#running-locally)
-- [API documentation](#api-documentation)
-- [Testing and verification](#testing-and-verification)
-- [Privacy and security](#privacy-and-security)
-- [Current limitations](#current-limitations)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-- [License](#license)
+- [1. Introduction](#1-introduction)
+- [2. Features](#2-features)
+- [3. Screenshots](#3-screenshots)
+- [4. CLI screenshots](#4-cli-screenshots)
+- [5. Architecture](#5-architecture)
+- [6. Processing workflow](#6-processing-workflow)
+- [7. Dashboard](#7-dashboard)
+- [8. CLI Usage](#8-cli-usage)
+- [9. Supported formats](#9-supported-formats)
+- [10. Writing modes](#10-writing-modes)
+- [11. Provider configuration](#11-provider-configuration)
+- [12. Academic integrity](#12-academic-integrity)
+- [13. Citation intelligence](#13-citation-intelligence)
+- [14. Similarity review](#14-similarity-review)
+- [15. Formatting preservation](#15-formatting-preservation)
+- [16. Installation](#16-installation)
+- [17. Environment configuration](#17-environment-configuration)
+- [18. Running locally](#18-running-locally)
+- [19. API documentation](#19-api-documentation)
+- [20. Testing and verification](#20-testing-and-verification)
+- [21. Privacy and security](#21-privacy-and-security)
+- [22. Current limitations](#22-current-limitations)
+- [23. Contributing](#23-contributing)
+- [24. License](#24-license)
 
-## ![Overview](docs/assets/icons/overview.svg) Overview
+<h2><img src="docs/assets/icons/overview.svg" width="20" height="20" alt="" /> 1. Introduction</h2>
 
 Academic Humanizer is a monorepo with a Next.js dashboard, FastAPI service, shared Python engine, Typer CLI, and SQLite metadata store.
 
@@ -60,7 +59,7 @@ The application currently supports:
 
 The source of truth is the implementation in `packages/engine`, `apps/api`, `apps/dashboard`, and `packages/cli`.
 
-## ![Features](docs/assets/icons/features.svg) Capabilities
+<h2><img src="docs/assets/icons/features.svg" width="20" height="20" alt="" /> 2. Features</h2>
 
 | Area | Implemented behavior |
 | --- | --- |
@@ -70,7 +69,7 @@ The source of truth is the implementation in `packages/engine`, `apps/api`, `app
 | Preservation | Original hash tracking, separate revised output, stable element checks, conservative multi-run handling |
 | Local operations | SQLite schema migrations, local files, Typer commands, FastAPI versioned API |
 
-## ![Dashboard](docs/assets/icons/dashboard.svg) Screenshots
+<h2><img src="docs/assets/icons/dashboard.svg" width="20" height="20" alt="" /> 3. Screenshots</h2>
 
 The screenshots below were captured from the running Next.js dashboard and FastAPI API using a non-sensitive demo DOCX.
 
@@ -100,7 +99,7 @@ The screenshots below were captured from the running Next.js dashboard and FastA
 
 The writing comparison panel is implemented in the document workspace, but a genuine revised suggestion screenshot was not captured because no live AI provider was configured in this environment. The workspace therefore remains in its real pending-provider state rather than showing fabricated output.
 
-## ![Terminal](docs/assets/icons/terminal.svg) CLI screenshots
+<h2><img src="docs/assets/icons/terminal.svg" width="20" height="20" alt="" /> 4. CLI screenshots</h2>
 
 The CLI commands were verified directly with the repository-local executable. A window-level terminal screenshot could not be captured in the current headless desktop session, so no synthetic terminal image is included. This avoids presenting rendered text as a screenshot of a real terminal.
 
@@ -114,7 +113,7 @@ academix providers list -> OpenAI, Anthropic, Gemini, and Ollama status rendered
 
 The exact command examples and provider-unavailable behavior are documented in the [CLI](#-cli) section below.
 
-## ![Architecture](docs/assets/icons/architecture.svg) Architecture
+<h2><img src="docs/assets/icons/architecture.svg" width="20" height="20" alt="" /> 5. Architecture</h2>
 
 ![System architecture](docs/assets/diagrams/system-architecture.svg)
 
@@ -126,13 +125,13 @@ The exact command examples and provider-unavailable behavior are documented in t
 | CLI | `packages/cli` | Local commands using the same engine services |
 | Storage | `storage/` | SQLite metadata and UUID-scoped original documents |
 
-## ![Document processing](docs/assets/icons/document-processing.svg) Processing workflow
+<h2><img src="docs/assets/icons/document-processing.svg" width="20" height="20" alt="" /> 6. Processing workflow</h2>
 
 ![Document processing pipeline](docs/assets/diagrams/document-processing-pipeline.svg)
 
 Documents are copied into a UUID-named local directory after validation. The original upload is never overwritten. Provider calls occur only when a user requests a writing suggestion.
 
-## ![Dashboard](docs/assets/icons/dashboard.svg) Dashboard
+<h2><img src="docs/assets/icons/dashboard.svg" width="20" height="20" alt="" /> 7. Dashboard</h2>
 
 Routes currently present:
 
@@ -145,7 +144,7 @@ Routes currently present:
 
 The interface uses the existing obsidian palette, editorial serif document text, compact navigation, and custom inline SVG marks. It does not use Lucide, emoji, purple gradients, or fabricated analytics.
 
-## ![Terminal](docs/assets/icons/terminal.svg) CLI
+<h2><img src="docs/assets/icons/terminal.svg" width="20" height="20" alt="" /> 8. CLI Usage</h2>
 
 The installed `academix` command uses the same shared engine as the API:
 
@@ -165,7 +164,7 @@ academix serve --port 8000
 
 `improve` requests a real configured provider and asks for explicit approval before writing a separate revised DOCX. `providers test` reports connection failure when the configured endpoint cannot be reached.
 
-## ![Document processing](docs/assets/icons/document-processing.svg) Supported formats
+<h2><img src="docs/assets/icons/document-processing.svg" width="20" height="20" alt="" /> 9. Supported formats</h2>
 
 - **DOCX** — validated ZIP package, ordered paragraphs and tables, styles, runs, sections, relationships, images, citations, and references.
 - **PDF** — text extraction with page and block analysis. Image-only pages report that OCR is required; OCR is not silently performed.
@@ -173,7 +172,7 @@ academix serve --port 8000
 
 PDF layout-preserving editing is not implemented.
 
-## ![Writing engine](docs/assets/icons/writing-engine.svg) Writing modes
+<h2><img src="docs/assets/icons/writing-engine.svg" width="20" height="20" alt="" /> 10. Writing modes</h2>
 
 The writing engine supports:
 
@@ -187,7 +186,7 @@ The writing engine supports:
 
 The engine preserves numbers, dates, citations, technical terms, quotations, negation, and uncertainty where the provider response allows validation. Warnings block automatic acceptance.
 
-## ![Providers](docs/assets/icons/providers.svg) Provider configuration
+<h2><img src="docs/assets/icons/providers.svg" width="20" height="20" alt="" /> 11. Provider configuration</h2>
 
 ![Provider architecture](docs/assets/diagrams/provider-architecture.svg)
 
@@ -216,7 +215,7 @@ academix providers test --provider openai
 
 The provider page distinguishes `not configured`, `not tested`, `connection_successful`, and connection failure. In this repository environment, no live AI provider request has been verified.
 
-## ![Academic integrity](docs/assets/icons/academic-integrity.svg) Academic integrity
+<h2><img src="docs/assets/icons/academic-integrity.svg" width="20" height="20" alt="" /> 12. Academic integrity</h2>
 
 ![Integrity workflow](docs/assets/diagrams/integrity-workflow.svg)
 
@@ -239,13 +238,13 @@ Implemented checks include:
 
 Metadata matches do not prove that a source supports a claim. The application does not access Turnitin, iThenticate, restricted academic databases, or the full internet.
 
-## ![Academic integrity](docs/assets/icons/academic-integrity.svg) Citation intelligence
+<h2><img src="docs/assets/icons/academic-integrity.svg" width="20" height="20" alt="" /> 13. Citation intelligence</h2>
 
 Citation intelligence currently extracts author-year and IEEE-like in-text citations, bibliography entries, DOIs, publication years, and author names. It compares citations with references and reports missing, unreferenced, inconsistent, or unverifiable entries with evidence and confidence.
 
 Supported style detection includes APA 7, IEEE, Harvard, MLA, and Chicago heuristics. This is a review aid rather than a full style-guide validator.
 
-## ![Academic integrity](docs/assets/icons/academic-integrity.svg) Similarity review
+<h2><img src="docs/assets/icons/academic-integrity.svg" width="20" height="20" alt="" /> 14. Similarity review</h2>
 
 Similarity review has two deliberately bounded inputs:
 
@@ -254,7 +253,7 @@ Similarity review has two deliberately bounded inputs:
 
 Each result includes matching text and source location where available. No internet-wide similarity percentage is generated, and no restricted academic service is implied.
 
-## ![Formatting](docs/assets/icons/formatting.svg) Formatting preservation
+<h2><img src="docs/assets/icons/formatting.svg" width="20" height="20" alt="" /> 15. Formatting preservation</h2>
 
 ![Controlled document processing](docs/assets/diagrams/document-processing-pipeline.svg)
 
@@ -273,7 +272,7 @@ Current safeguards:
 
 Advanced OOXML fields, equation fidelity, complex numbering, and every layout edge case are not guaranteed and should be validated for high-stakes documents.
 
-## ![Installation](docs/assets/icons/installation.svg) Installation
+<h2><img src="docs/assets/icons/installation.svg" width="20" height="20" alt="" /> 16. Installation</h2>
 
 Requirements:
 
@@ -294,7 +293,7 @@ npm install
 cd ../..
 ```
 
-## ![Configuration](docs/assets/icons/configuration.svg) Environment configuration
+<h2><img src="docs/assets/icons/configuration.svg" width="20" height="20" alt="" /> 17. Environment configuration</h2>
 
 Supported environment variables are documented in [.env.example](.env.example):
 
@@ -313,7 +312,7 @@ Supported environment variables are documented in [.env.example](.env.example):
 | `ACADEMIX_GOOGLE_API_KEY` | Server-side Gemini credential |
 | `ACADEMIX_OLLAMA_BASE_URL` | Local Ollama endpoint |
 
-## ![Dashboard](docs/assets/icons/dashboard.svg) Running locally
+<h2><img src="docs/assets/icons/dashboard.svg" width="20" height="20" alt="" /> 18. Running locally</h2>
 
 Start API and dashboard together:
 
@@ -333,13 +332,13 @@ cd apps/dashboard && npm run dev
 
 Open `http://localhost:3000`. API health is available at `http://127.0.0.1:8000/api/v1/health`; OpenAPI documentation is at `http://127.0.0.1:8000/api/docs`.
 
-## ![Architecture](docs/assets/icons/architecture.svg) API documentation
+<h2><img src="docs/assets/icons/architecture.svg" width="20" height="20" alt="" /> 19. API documentation</h2>
 
 The FastAPI service publishes interactive OpenAPI documentation at `/api/docs` and the schema at `/api/openapi.json`. The versioned route surface includes health/configuration, document upload and analysis, suggestions, integrity findings, export, and provider connection testing.
 
 The dashboard calls the API through `NEXT_PUBLIC_API_URL`; the default local development target is `http://127.0.0.1:8000/api/v1`.
 
-## ![Testing](docs/assets/icons/testing.svg) Testing and verification
+<h2><img src="docs/assets/icons/testing.svg" width="20" height="20" alt="" /> 20. Testing and verification</h2>
 
 ```bash
 .venv/bin/ruff check packages/engine/src apps/api/src packages/cli/src tests
@@ -352,7 +351,7 @@ npm run build
 
 The repository currently has 22 passing Python tests. Dashboard TypeScript validation and the production build pass. Provider tests use mocked responses unless valid credentials and a reachable provider are configured.
 
-## ![Security](docs/assets/icons/security.svg) Privacy and security
+<h2><img src="docs/assets/icons/security.svg" width="20" height="20" alt="" /> 21. Privacy and security</h2>
 
 - Documents and metadata remain local by default.
 - Original uploads are never overwritten.
@@ -364,7 +363,7 @@ The repository currently has 22 passing Python tests. Dashboard TypeScript valid
 
 `npm audit` currently reports one critical Next.js advisory chain and one high PostCSS advisory. The available fix requires a breaking Next.js 16 upgrade from the pinned Next.js 14 setup. It has not been applied blindly; this remains a documented upgrade task.
 
-## ![Roadmap](docs/assets/icons/roadmap.svg) Current limitations
+<h2><img src="docs/assets/icons/roadmap.svg" width="20" height="20" alt="" /> 22. Current limitations</h2>
 
 - No live AI provider was available during this documentation capture.
 - OCR is not implemented.
@@ -375,15 +374,15 @@ The repository currently has 22 passing Python tests. Dashboard TypeScript valid
 - No plagiarism score or AI-detector score is produced.
 - Processing is synchronous; very large documents and slow providers need further operational benchmarking.
 
-## ![Contributing](docs/assets/icons/contributing.svg) Contributing
+<h2><img src="docs/assets/icons/contributing.svg" width="20" height="20" alt="" /> 23. Contributing</h2>
 
 Keep parsing, writing, integrity, storage, and preservation behavior in `packages/engine`. Add focused tests before changing API routes or dashboard behavior. Run the Python and dashboard verification commands above before submitting changes. Do not add credentials, private documents, generated `.next` output, or local SQLite data.
 
-## ![License](docs/assets/icons/license.svg) License
+<h2><img src="docs/assets/icons/license.svg" width="20" height="20" alt="" /> 24. License</h2>
 
 No license file is currently declared in this repository. Add an explicit license before distributing the project as open-source software.
 
-## Asset index
+<h2><img src="docs/assets/icons/license.svg" width="20" height="20" alt="" /> Asset index</h2>
 
 - Product identity: [`assets/branding/`](assets/branding/)
 - README icons: [`docs/assets/icons/`](docs/assets/icons/)
