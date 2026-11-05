@@ -1,6 +1,7 @@
 class AcademixError(Exception):
     pass
 
+
 class ConfigurationError(AcademixError):
     pass
 

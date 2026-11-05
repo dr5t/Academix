@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
+from typing import Optional
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -15,9 +16,9 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     max_upload_bytes: int = Field(default=50 * 1024 * 1024, gt=0)
     log_level: str = "INFO"
-    openai_api_key: str | None = None
-    anthropic_api_key: str | None = None
-    google_api_key: str | None = None
+    openai_api_key: Optional[str] = None
+    anthropic_api_key: Optional[str] = None
+    google_api_key: Optional[str] = None
     ollama_base_url: str = "http://127.0.0.1:11434"
 
     model_config = SettingsConfigDict(
