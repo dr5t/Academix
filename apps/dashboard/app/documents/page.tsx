@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, DragEvent, useEffect, useState } from "react";
 
 type DocumentRecord = {
   id: string;
@@ -33,8 +33,7 @@ export default function Documents() {
     setDocuments(await response.json());
   }
 
-  async function upload(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
+  async function uploadFile(file: File | undefined) {
     if (!file) return;
     setError("");
     setUploading(true);
@@ -51,8 +50,17 @@ export default function Documents() {
       setError(uploadError instanceof Error ? uploadError.message : "Upload failed.");
     } finally {
       setUploading(false);
-      event.target.value = "";
     }
+  }
+
+  async function upload(event: ChangeEvent<HTMLInputElement>) {
+    await uploadFile(event.target.files?.[0]);
+    event.target.value = "";
+  }
+
+  function drop(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    void uploadFile(event.dataTransfer.files[0]);
   }
 
   async function remove(documentId: string) {
@@ -76,7 +84,7 @@ export default function Documents() {
           <div className="page-heading"><div><p className="eyebrow">DOCUMENTS</p><h1>Document library</h1><p className="lede">Original files are stored locally and remain untouched during analysis.</p></div><Link className="button primary" href="/documents/new">New analysis</Link></div>
           {error && <div className="error-banner">{error}</div>}
           <section className="panel document-list">
-            <div className="panel-header"><div><p className="eyebrow">INDEX</p><h2>{documents.length} document{documents.length === 1 ? "" : "s"}</h2></div><label className="button"><input className="file-input" type="file" accept=".docx,.pdf,.txt" onChange={upload} />{uploading ? "Processing…" : "Import file"}</label></div>
+            <div className="panel-header"><div><p className="eyebrow">INDEX</p><h2>{documents.length} document{documents.length === 1 ? "" : "s"}</h2></div><label className="button" onDragOver={(event) => event.preventDefault()} onDrop={drop}><input className="file-input" type="file" accept=".docx,.pdf,.txt" onChange={upload} />{uploading ? "Processing…" : "Import file"}</label></div>
             {documents.length === 0 ? <div className="empty"><h3>No documents indexed</h3><p>Import a DOCX, PDF, or text file to begin structural analysis.</p></div> : <div className="rows">{documents.map((document) => <div className="document-row" key={document.id}><div><strong>{document.filename}</strong><p>{document.document_type.toUpperCase()} · {formatBytes(document.file_size)} · {new Date(document.created_at).toLocaleString()}</p></div><span className={`pill ${document.status === "ready" ? "success" : ""}`}>{document.status}</span><Link className="text-link" href={`/documents/${document.id}`}>Open</Link><button className="quiet-button" onClick={() => remove(document.id)}>Remove</button></div>)}</div>}
           </section>
         </div>

@@ -69,4 +69,17 @@ npm run build
 4. Keep dashboard state and presentation in `apps/dashboard`.
 5. Add fixtures and preservation tests before implementing document transformation.
 
-Phase 1 does not send documents to providers, modify files, or implement humanization. Those behaviors belong to later phases and must preserve the local-first and academic-integrity constraints.
+## Document intelligence
+
+Phase 2 supports local DOCX, PDF, and TXT ingestion:
+
+```bash
+academix serve
+curl -F "file=@research-paper.docx" http://127.0.0.1:8000/api/v1/documents
+```
+
+Documents are copied into a UUID-named directory under `ACADEMIX_DOCUMENTS_PATH`. The source upload is never modified. The engine validates DOCX package structure, computes a SHA-256 hash, extracts ordered DOCX elements and formatting metadata, and identifies text-free PDF pages where OCR may be required. SQLite stores metadata and serialized analysis facts, not full document content.
+
+The dashboard document library and new-analysis screen support browsing and drag-and-drop upload. Open a document to review its detected outline, counts, facts, and extraction warnings.
+
+Phase 2 does not send documents to providers, modify files, or implement humanization. Those behaviors belong to later phases and must preserve the local-first and academic-integrity constraints.
