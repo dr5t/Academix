@@ -14,8 +14,13 @@ from academic_engine.document_models import (
 from academic_engine.exceptions import StorageError
 from academic_engine.models import Workspace
 from academic_engine.writing_models import SuggestionRecord, SuggestionStatus, WritingMode
+from academic_engine.integrity_models import (
+    FindingStatus,
+    IntegrityFinding,
+    IntegrityReport,
+)
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 
 class SQLiteStore:
@@ -46,6 +51,7 @@ class SQLiteStore:
                         file_hash TEXT NOT NULL DEFAULT '',
                         status TEXT NOT NULL DEFAULT 'ready',
                         analysis_json TEXT,
+                        integrity_json TEXT,
                         created_at TEXT NOT NULL,
                         FOREIGN KEY(workspace_id) REFERENCES workspaces(id)
                     );
@@ -83,6 +89,21 @@ class SQLiteStore:
                         created_at TEXT NOT NULL,
                         FOREIGN KEY(document_id) REFERENCES documents(id)
                     );
+                    CREATE TABLE IF NOT EXISTS integrity_findings (
+                        id TEXT PRIMARY KEY,
+                        document_id TEXT NOT NULL,
+                        element_id TEXT,
+                        category TEXT NOT NULL,
+                        severity TEXT NOT NULL,
+                        explanation TEXT NOT NULL,
+                        confidence REAL NOT NULL,
+                        recommended_action TEXT NOT NULL,
+                        evidence_json TEXT NOT NULL,
+                        status TEXT NOT NULL,
+                        dismissal_reason TEXT,
+                        created_at TEXT NOT NULL,
+                        FOREIGN KEY(document_id) REFERENCES documents(id)
+                    );
                     """
                 )
                 row = connection.execute("SELECT COUNT(*) FROM schema_version").fetchone()
@@ -107,10 +128,30 @@ class SQLiteStore:
                             "ALTER TABLE documents ADD COLUMN status TEXT NOT NULL DEFAULT 'ready'"
                         ),
                         "analysis_json": "ALTER TABLE documents ADD COLUMN analysis_json TEXT",
+                        "integrity_json": "ALTER TABLE documents ADD COLUMN integrity_json TEXT",
                     }
                     for column, statement in migrations.items():
                         if column not in columns:
                             connection.execute(statement)
+                    connection.execute(
+                        """
+                        CREATE TABLE IF NOT EXISTS integrity_findings (
+                            id TEXT PRIMARY KEY,
+                            document_id TEXT NOT NULL,
+                            element_id TEXT,
+                            category TEXT NOT NULL,
+                            severity TEXT NOT NULL,
+                            explanation TEXT NOT NULL,
+                            confidence REAL NOT NULL,
+                            recommended_action TEXT NOT NULL,
+                            evidence_json TEXT NOT NULL,
+                            status TEXT NOT NULL,
+                            dismissal_reason TEXT,
+                            created_at TEXT NOT NULL,
+                            FOREIGN KEY(document_id) REFERENCES documents(id)
+                        )
+                        """
+                    )
                     connection.execute("UPDATE schema_version SET version = ?", (SCHEMA_VERSION,))
         except sqlite3.Error as error:
             raise StorageError(f"Unable to initialize local database: {error}") from error
@@ -223,10 +264,105 @@ class SQLiteStore:
                 (analysis, document_id),
             )
 
+    def update_integrity(self, document_id: str, report: IntegrityReport) -> None:
+        with sqlite3.connect(self.database_path) as connection:
+            connection.execute(
+                "UPDATE documents SET integrity_json = ? WHERE id = ?",
+                (report.model_dump_json(), document_id),
+            )
+
+    def get_integrity(self, document_id: str) -> IntegrityReport | None:
+        with sqlite3.connect(self.database_path) as connection:
+            row = connection.execute(
+                "SELECT integrity_json FROM documents WHERE id = ?", (document_id,)
+            ).fetchone()
+        return IntegrityReport.model_validate_json(row[0]) if row and row[0] else None
+
+    def create_integrity_finding(self, finding: IntegrityFinding) -> IntegrityFinding:
+        import json
+
+        with sqlite3.connect(self.database_path) as connection:
+            connection.execute(
+                """
+                INSERT OR REPLACE INTO integrity_findings(
+                    id, document_id, element_id, category, severity, explanation,
+                    confidence, recommended_action, evidence_json, status,
+                    dismissal_reason, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    finding.id,
+                    finding.document_id,
+                    finding.element_id,
+                    finding.category,
+                    finding.severity,
+                    finding.explanation,
+                    finding.confidence,
+                    finding.recommended_action,
+                    json.dumps(finding.evidence),
+                    finding.status.value,
+                    finding.dismissal_reason,
+                    finding.created_at.isoformat(),
+                ),
+            )
+        return finding
+
+    def list_integrity_findings(self, document_id: str) -> list[IntegrityFinding]:
+        with sqlite3.connect(self.database_path) as connection:
+            rows = connection.execute(
+                "SELECT * FROM integrity_findings WHERE document_id = ? ORDER BY created_at DESC",
+                (document_id,),
+            ).fetchall()
+        return [self._finding_from_row(row) for row in rows]
+
+    def get_integrity_finding(self, finding_id: str) -> IntegrityFinding | None:
+        with sqlite3.connect(self.database_path) as connection:
+            row = connection.execute(
+                "SELECT * FROM integrity_findings WHERE id = ?", (finding_id,)
+            ).fetchone()
+        return self._finding_from_row(row) if row else None
+
+    def update_integrity_finding(
+        self, finding_id: str, status: FindingStatus, dismissal_reason: str | None
+    ) -> IntegrityFinding | None:
+        with sqlite3.connect(self.database_path) as connection:
+            connection.execute(
+                "UPDATE integrity_findings SET status = ?, dismissal_reason = ? WHERE id = ?",
+                (status.value, dismissal_reason, finding_id),
+            )
+        return self.get_integrity_finding(finding_id)
+
+    @staticmethod
+    def _finding_from_row(row: tuple) -> IntegrityFinding:
+        import json
+
+        return IntegrityFinding(
+            id=row[0],
+            document_id=row[1],
+            element_id=row[2],
+            category=row[3],
+            severity=row[4],
+            explanation=row[5],
+            confidence=row[6],
+            recommended_action=row[7],
+            evidence=json.loads(row[8]),
+            status=FindingStatus(row[9]),
+            dismissal_reason=row[10],
+            created_at=datetime.fromisoformat(row[11]),
+        )
+
     def delete_document(self, document_id: str) -> None:
         with sqlite3.connect(self.database_path) as connection:
             connection.execute(
                 "DELETE FROM processing_history WHERE document_id = ?",
+                (document_id,),
+            )
+            connection.execute(
+                "DELETE FROM integrity_findings WHERE document_id = ?",
+                (document_id,),
+            )
+            connection.execute(
+                "DELETE FROM suggestions WHERE document_id = ?",
                 (document_id,),
             )
             connection.execute("DELETE FROM documents WHERE id = ?", (document_id,))

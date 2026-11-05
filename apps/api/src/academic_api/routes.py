@@ -12,6 +12,13 @@ from academic_engine.document_models import (
 from academic_engine.document_parser import parse_document
 from academic_engine.document_service import DocumentService
 from academic_engine.exceptions import DocumentNotFoundError
+from academic_engine.integrity_models import (
+    FindingReviewRequest,
+    IntegrityFinding,
+    IntegrityReport,
+    IntegrityRequest,
+)
+from academic_engine.integrity_service import IntegrityService
 from academic_engine.models import ProviderMetadata
 from academic_engine.providers import provider_metadata
 from academic_engine.storage import SQLiteStore
@@ -42,6 +49,14 @@ def writing_service() -> WritingService:
     store = SQLiteStore(settings.database_path)
     store.initialize()
     return WritingService(settings, store, document_service())
+
+
+def integrity_service() -> IntegrityService:
+    settings = get_settings()
+    settings.ensure_directories()
+    store = SQLiteStore(settings.database_path)
+    store.initialize()
+    return IntegrityService(store, document_service())
 
 
 @router.get("/providers", response_model=list[ProviderMetadata], tags=["providers"])
@@ -124,6 +139,46 @@ def create_suggestion(document_id: str, request: SuggestionRequest) -> Suggestio
 )
 def list_suggestions(document_id: str) -> list[SuggestionRecord]:
     return writing_service().suggestions(document_id)
+
+
+@router.post(
+    "/documents/{document_id}/integrity",
+    response_model=IntegrityReport,
+    tags=["integrity"],
+)
+def analyze_integrity(document_id: str, request: IntegrityRequest) -> IntegrityReport:
+    return integrity_service().analyze(document_id, request)
+
+
+@router.get(
+    "/documents/{document_id}/integrity",
+    response_model=IntegrityReport | None,
+    tags=["integrity"],
+)
+def get_integrity(document_id: str) -> IntegrityReport | None:
+    return integrity_service().report(document_id)
+
+
+@router.get(
+    "/documents/{document_id}/integrity/findings",
+    response_model=list[IntegrityFinding],
+    tags=["integrity"],
+)
+def list_integrity_findings(document_id: str) -> list[IntegrityFinding]:
+    return integrity_service().findings(document_id)
+
+
+@router.post(
+    "/documents/{document_id}/integrity/findings/{finding_id}/review",
+    response_model=IntegrityFinding,
+    tags=["integrity"],
+)
+def review_integrity_finding(
+    document_id: str, finding_id: str, request: FindingReviewRequest
+) -> IntegrityFinding:
+    return integrity_service().review_finding(
+        document_id, finding_id, request.status, request.dismissal_reason
+    )
 
 
 @router.get(
