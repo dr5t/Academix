@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "academic-humanizer"
+version = "0.1.0"
+description = "Local-first academic document intelligence workspace"
+requires-python = ">=3.9"
+dependencies = [
+  "academic-humanizer-engine",
+  "academic-humanizer-api",
+  "academic-humanizer-cli",
+]
+
+[tool.setuptools]
+packages = []
+
+[tool.uv.sources]
+academic-humanizer-engine = { workspace = true }
+academic-humanizer-api = { workspace = true }
+academic-humanizer-cli = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["packages/engine/src", "apps/api/src", "packages/cli/src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
