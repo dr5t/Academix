@@ -39,7 +39,11 @@ class CrossrefProvider(ScholarlyMetadataProvider):
                 for key in ("DOI", "title", "author", "published", "container-title")
                 if item.get(key) is not None
             }
-            confidence = 1.0 if item.get("DOI") and query.lower() in " ".join(item.get("title", [])).lower() else 0.65
+            confidence = (
+                1.0
+                if item.get("DOI") and query.lower() in " ".join(item.get("title", [])).lower()
+                else 0.65
+            )
             return MetadataVerification(
                 provider=self.name,
                 query=query,

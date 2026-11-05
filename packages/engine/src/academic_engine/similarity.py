@@ -26,7 +26,9 @@ def compare_documents(
             continue
         best: tuple[float, str, str, str] | None = None
         for source_id, source_element in source_elements:
-            ratio = SequenceMatcher(None, target_tokens, _tokens(source_element.original_content)).ratio()
+            ratio = SequenceMatcher(
+                None, target_tokens, _tokens(source_element.original_content)
+            ).ratio()
             if best is None or ratio > best[0]:
                 best = (ratio, source_id, source_element.id, source_element.original_content)
         if best and best[0] >= 0.72:
@@ -46,14 +48,17 @@ def compare_documents(
 
 def find_internal_repetition(document: ParsedDocument) -> list[SimilarityMatch]:
     elements = [
-        element for element in document.elements
+        element
+        for element in document.elements
         if element.element_type in {ElementType.PARAGRAPH, ElementType.HEADING}
         and len(_tokens(element.original_content)) >= 8
     ]
     matches = []
     for index, left in enumerate(elements):
         for right in elements[index + 1 :]:
-            ratio = SequenceMatcher(None, _tokens(left.original_content), _tokens(right.original_content)).ratio()
+            ratio = SequenceMatcher(
+                None, _tokens(left.original_content), _tokens(right.original_content)
+            ).ratio()
             if ratio >= 0.82:
                 matches.append(
                     SimilarityMatch(

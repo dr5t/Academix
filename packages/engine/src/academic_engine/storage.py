@@ -12,13 +12,13 @@ from academic_engine.document_models import (
     DocumentRecord,
 )
 from academic_engine.exceptions import StorageError
-from academic_engine.models import Workspace
-from academic_engine.writing_models import SuggestionRecord, SuggestionStatus, WritingMode
 from academic_engine.integrity_models import (
     FindingStatus,
     IntegrityFinding,
     IntegrityReport,
 )
+from academic_engine.models import Workspace
+from academic_engine.writing_models import SuggestionRecord, SuggestionStatus, WritingMode
 
 SCHEMA_VERSION = 4
 

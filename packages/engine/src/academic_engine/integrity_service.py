@@ -8,12 +8,10 @@ from academic_engine.document_parser import parse_document
 from academic_engine.document_service import DocumentService
 from academic_engine.exceptions import DocumentNotFoundError, ProviderUnavailableError
 from academic_engine.integrity_models import (
-    CitationStyle,
     FindingStatus,
     IntegrityFinding,
     IntegrityReport,
     IntegrityRequest,
-    MetadataVerification,
 )
 from academic_engine.metadata_providers import CrossrefProvider, OpenAlexProvider
 from academic_engine.similarity import compare_documents, find_internal_repetition
@@ -86,9 +84,7 @@ class IntegrityService:
             raise DocumentNotFoundError("Integrity finding was not found.")
         if status is FindingStatus.DISMISSED and not dismissal_reason:
             raise ValueError("A dismissal reason is required.")
-        updated = self.store.update_integrity_finding(
-            finding_id, status, dismissal_reason
-        )
+        updated = self.store.update_integrity_finding(finding_id, status, dismissal_reason)
         if updated is None:
             raise DocumentNotFoundError("Integrity finding was not found.")
         return updated
@@ -162,7 +158,10 @@ class IntegrityService:
                             created_at=datetime.now(timezone.utc),
                         )
                     )
-            if any(marker in text.lower() for marker in (" demonstrates ", " was found ", " significantly ")):
+            if any(
+                marker in text.lower()
+                for marker in (" demonstrates ", " was found ", " significantly ")
+            ):
                 if not any(marker in text for marker in ("(", "[", "doi.org")):
                     findings.append(
                         IntegrityFinding(

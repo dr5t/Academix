@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import Optional
 from uuid import uuid4
 
 from academic_engine.config import get_settings
@@ -152,10 +155,10 @@ def analyze_integrity(document_id: str, request: IntegrityRequest) -> IntegrityR
 
 @router.get(
     "/documents/{document_id}/integrity",
-    response_model=IntegrityReport | None,
+    response_model=Optional[IntegrityReport],
     tags=["integrity"],
 )
-def get_integrity(document_id: str) -> IntegrityReport | None:
+def get_integrity(document_id: str) -> Optional[IntegrityReport]:
     return integrity_service().report(document_id)
 
 

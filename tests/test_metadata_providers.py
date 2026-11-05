@@ -21,7 +21,9 @@ class Response:
 
 
 def test_crossref_metadata_is_structured(monkeypatch) -> None:
-    monkeypatch.setattr("academic_engine.metadata_providers.httpx.get", lambda *args, **kwargs: Response())
+    monkeypatch.setattr(
+        "academic_engine.metadata_providers.httpx.get", lambda *args, **kwargs: Response()
+    )
     verification = CrossrefProvider().verify("A verified title")
     assert verification.provider == "crossref"
     assert verification.persistent_identifier == "10.1000/example"
