@@ -1,10 +1,10 @@
 # Academic Humanizer
 
-Academic Humanizer is a local-first academic document workspace. Phase 1 establishes the shared Python engine, FastAPI service, Typer CLI, SQLite metadata store, and Next.js dashboard foundation. Document transformation is intentionally not implemented yet.
+Academic Humanizer is a local-first academic document workspace. The shared Python engine powers the FastAPI service, Typer CLI, SQLite metadata store, document intelligence pipeline, and Next.js dashboard.
 
 ## Requirements
 
-- Python 3.11 or newer
+- Python 3.9 or newer
 - Node.js 18.17 or newer
 - npm
 
@@ -19,7 +19,7 @@ cp .env.example .env
 cd apps/dashboard && npm install && cd ../..
 ```
 
-The API and CLI use the same `academic-humanizer-engine` package. Local metadata is stored in `storage/academix.sqlite3`; source documents are not copied by Phase 1.
+The API and CLI use the same `academic-humanizer-engine` package. Local metadata is stored in `storage/academix.sqlite3`, and uploaded source documents are stored beneath `ACADEMIX_DOCUMENTS_PATH`.
 
 ## Run locally
 
@@ -50,6 +50,8 @@ academix serve --port 8000
 ```
 
 Provider credentials belong in the local `.env` file and are never exposed by the configuration endpoint or dashboard bundle. Configure only providers you explicitly intend to use.
+
+Phase 3 supports provider-backed paragraph suggestions through OpenAI, Anthropic, Google Gemini, and Ollama. Set the corresponding API key or local Ollama URL in `.env`, then select the provider in the document workspace. Provider requests are bounded to the selected paragraph and nearby context; the original upload is never sent to a provider by the storage layer.
 
 ## Verification
 
@@ -82,4 +84,16 @@ Documents are copied into a UUID-named directory under `ACADEMIX_DOCUMENTS_PATH`
 
 The dashboard document library and new-analysis screen support browsing and drag-and-drop upload. Open a document to review its detected outline, counts, facts, and extraction warnings.
 
-Phase 2 does not send documents to providers, modify files, or implement humanization. Those behaviors belong to later phases and must preserve the local-first and academic-integrity constraints.
+## Writing intelligence
+
+The writing workspace supports seven modes, structured provider responses, paragraph-level suggestions, validation warnings, accept/reject review, and revised DOCX export:
+
+```bash
+academix analyze-writing research-paper.docx
+academix improve research-paper.docx --mode academic_research
+academix export research-paper.docx --format docx
+```
+
+Only explicitly accepted suggestions are applied to a separate revised DOCX. Original uploads remain immutable. Suggestions with numeric, citation, or other validation warnings require review and cannot be accepted automatically. Multi-run paragraphs with incompatible formatting are conservatively rejected during export rather than flattened.
+
+Provider adapter tests use mocked responses. No live OpenAI, Anthropic, Gemini, or Ollama request was verified in this environment because valid credentials or a running local model were unavailable. Configure a provider and run a real suggestion request to perform live verification.

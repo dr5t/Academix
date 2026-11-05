@@ -22,6 +22,9 @@ PROVIDER_LABELS = {
     "google": "Google Gemini",
     "ollama": "Ollama",
 }
+MODE_ALIASES = {
+    "academic": WritingMode.ACADEMIC_RESEARCH,
+}
 
 
 @app.callback()
@@ -60,7 +63,7 @@ def providers_command(
 ) -> None:
     """List configured AI providers."""
     if action.lower() != "list":
-        raise typer.BadParameter("Only the 'list' action is available in Phase 1.")
+        raise typer.BadParameter("Only the 'list' action is available.")
     table = Table("Provider", "Status")
     for metadata in provider_metadata(get_settings()):
         status = "configured" if metadata.configured else "not configured"
@@ -87,11 +90,17 @@ def serve(
 @app.command()
 def improve(
     path: Path = typer.Argument(..., exists=True, readable=True),
-    mode: WritingMode = typer.Option(WritingMode.ACADEMIC_RESEARCH, "--mode"),
+    mode: str = typer.Option("academic", "--mode"),
     provider: Optional[str] = typer.Option(None, "--provider"),
 ) -> None:
     """Create a paragraph-level suggestion and request explicit approval."""
     settings = get_settings()
+    try:
+        selected_mode = MODE_ALIASES.get(mode.lower())
+        if selected_mode is None:
+            selected_mode = WritingMode(mode.lower())
+    except ValueError as error:
+        raise typer.BadParameter(f"Unsupported writing mode: {mode}") from error
     settings.ensure_directories()
     store = SQLiteStore(settings.database_path)
     store.initialize()
@@ -111,7 +120,7 @@ def improve(
         raise typer.BadParameter("The document has no editable paragraph.")
     suggestion = WritingService(settings, store, documents).create_suggestion(
         imported.id,
-        SuggestionRequest(element_id=element.id, mode=mode, provider=provider),
+        SuggestionRequest(element_id=element.id, mode=selected_mode, provider=provider),
     )
     console.print(
         f"\nOriginal:\n{suggestion.original_text}\n\nProposed:\n{suggestion.revised_text}"
@@ -150,8 +159,11 @@ def analyze_writing(path: Path = typer.Argument(..., exists=True, readable=True)
 def export(
     path: Path = typer.Argument(..., exists=True, readable=True),
     output: Optional[Path] = typer.Option(None, "--output", "-o"),
+    format: str = typer.Option("docx", "--format"),
 ) -> None:
     """Export accepted local suggestions for a document."""
+    if format.lower() != "docx":
+        raise typer.BadParameter("Only DOCX export is supported.")
     settings = get_settings()
     store = SQLiteStore(settings.database_path)
     store.initialize()
